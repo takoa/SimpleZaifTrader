@@ -29,7 +29,7 @@ namespace SimpleZaifTrader
 
         public void Update(ZaifNet.Public.TradeResponse tradeHistoryData)
         {
-            this.Date = DateTimeOffset.FromUnixTimeMilliseconds(tradeHistoryData.Date).Date;
+            this.Date = DateTimeOffset.FromUnixTimeSeconds(tradeHistoryData.Date).ToLocalTime().DateTime;
             this.Type = tradeHistoryData.TradeType.Equals("bid") ? TradeTypes.Bid : TradeTypes.Ask;
             this.Price = tradeHistoryData.Price;
             this.Amount = tradeHistoryData.Amount;
