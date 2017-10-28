@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -12,6 +13,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Controls;
+using System.Windows.Input;
+using Newtonsoft.Json;
 using CryptoWei;
 
 using TradeResponse = ZaifNet.Public.TradeResponse;
@@ -23,6 +26,12 @@ namespace SimpleZaifTrader
         private const int Failed = 0;
         private const int Succeeded = 1;
 
+        public CurrencyPairSettings CurrencyPairSettings { get; private set; } = Global.CurrencyPairDictionary[Global.CurrencyPairList[0]];
+
+        private Dictionary<string, Action> commands = new Dictionary<string, Action>();
+
+        private Preferences preferences;
+
         private HttpClient client = new HttpClient();
         private decimal usdjpy = 1m;
 
@@ -33,7 +42,6 @@ namespace SimpleZaifTrader
         private BackgroundWorker activeOrderUpdater = new BackgroundWorker() { WorkerReportsProgress = true };
         private BackgroundWorker publicApiUpdater;
 
-        private CurrencyPairSettings currencyPairSettings = Global.CurrencyPairDictionary[Global.CurrencyPairList[0]];
         private string timestamp;
         private int bidBookSize = 10;
         private int askBookSize = 10;
@@ -47,8 +55,6 @@ namespace SimpleZaifTrader
 
         public MainWindow()
         {
-            ApiKeys api = ApiKeys.Read(@"API.json");
-
             for (int i = 0; i < this.bids.Length; i++)
             {
                 this.bids[i] = new ZaifBookOrder();
@@ -60,9 +66,52 @@ namespace SimpleZaifTrader
                 this.tradeHistory[i] = new ZaifTradeHistoryData();
             }
 
-            this.tradeApi = new TradeApiUtility(api.ApiKey, api.SecretKey);
+            using (StreamReader reader = new StreamReader(@"API.json"))
+            {
+                string json = reader.ReadToEnd();
+                ApiKeys keys = JsonConvert.DeserializeObject<ApiKeys>(json);
+
+                this.tradeApi = new TradeApiUtility(keys.ApiKey, keys.SecretKey);
+            }
+
+            using (StreamReader reader = new StreamReader(@"Preferences.json"))
+            {
+                string json = reader.ReadToEnd();
+
+                this.preferences = JsonConvert.DeserializeObject<Preferences>(json);
+            }
+
+            this.RegisterCommands();
 
             InitializeComponent();
+        }
+
+        private void RegisterCommands()
+        {
+            this.commands.Add("CopyLastPrice", () => this.priceNumericTextBox.Text = this.lastPrice.ToString());
+            this.commands.Add("ClearPrice", () => this.priceNumericTextBox.Text = 0m.ToString());
+            this.commands.Add("ClearAmount", () => this.amountNumericTextBox.Text = 0m.ToString());
+
+            this.commands.Add("IncreasePrice1", () => this.AddToNumericTextBox(this.priceNumericTextBox, this.CurrencyPairSettings.PriceUnitStep));
+            this.commands.Add("IncreasePrice2", () => this.AddToNumericTextBox(this.priceNumericTextBox, this.CurrencyPairSettings.PriceUnitStep * 10m));
+            this.commands.Add("IncreasePrice3", () => this.AddToNumericTextBox(this.priceNumericTextBox, this.CurrencyPairSettings.PriceUnitStep * 100m));
+            this.commands.Add("DecreasePrice1", () => this.AddToNumericTextBox(this.priceNumericTextBox, -this.CurrencyPairSettings.PriceUnitStep));
+            this.commands.Add("DecreasePrice2", () => this.AddToNumericTextBox(this.priceNumericTextBox, this.CurrencyPairSettings.PriceUnitStep * -10m));
+            this.commands.Add("DecreasePrice3", () => this.AddToNumericTextBox(this.priceNumericTextBox, this.CurrencyPairSettings.PriceUnitStep * -100m));
+
+            this.commands.Add("IncreaseAmount1", () => this.AddToNumericTextBox(this.amountNumericTextBox, this.CurrencyPairSettings.AmountUnitStep));
+            this.commands.Add("IncreaseAmount2", () => this.AddToNumericTextBox(this.amountNumericTextBox, this.CurrencyPairSettings.AmountUnitStep * 10m));
+            this.commands.Add("IncreaseAmount3", () => this.AddToNumericTextBox(this.amountNumericTextBox, this.CurrencyPairSettings.AmountUnitStep * 100m));
+            this.commands.Add("DecreaseAmount1", () => this.AddToNumericTextBox(this.amountNumericTextBox, -this.CurrencyPairSettings.AmountUnitStep));
+            this.commands.Add("DecreaseAmount2", () => this.AddToNumericTextBox(this.amountNumericTextBox, this.CurrencyPairSettings.AmountUnitStep * -10m));
+            this.commands.Add("DecreaseAmount3", () => this.AddToNumericTextBox(this.amountNumericTextBox, this.CurrencyPairSettings.AmountUnitStep * -100m));
+        }
+
+        private void AddToNumericTextBox(NumericTextBox textBox, decimal delta)
+        {
+            decimal d = (!textBox.Text.Equals(string.Empty) ? decimal.Parse(textBox.Text) : 0m) + delta;
+
+            textBox.Text = (0 <= d ? d : 0m).ToString();
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -81,7 +130,7 @@ namespace SimpleZaifTrader
             {
                 while (true)
                 {
-                    ActiveOrdersResponse activeOrers = this.tradeApi.PostActiveOrders(this.currencyPairSettings.Name).GetAwaiter().GetResult();
+                    ActiveOrdersResponse activeOrers = this.tradeApi.PostActiveOrders(this.CurrencyPairSettings.Name).GetAwaiter().GetResult();
 
                     ((BackgroundWorker)obj).ReportProgress(0, activeOrers);
                     Thread.Sleep(1000);
@@ -92,7 +141,7 @@ namespace SimpleZaifTrader
                 ActiveOrdersResponse activeOrders = (ActiveOrdersResponse)eventArgs.UserState;
                 bool areActiveOrdersChanged = false;
 
-                if (activeOrders != null && this.previousActiveOrders != null && activeOrders.Return.Length == this.previousActiveOrders.Length)
+                if (activeOrders != null && this.previousActiveOrders != null && activeOrders.Return != null && activeOrders.Return.Length == this.previousActiveOrders.Length)
                 {
                     for (int i = 0; i < activeOrders.Return.Length; i++)
                     {
@@ -135,6 +184,19 @@ namespace SimpleZaifTrader
             this.activeOrderUpdater.RunWorkerAsync();
         }
 
+        private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            for (int i = 0; i < this.preferences.Shortcuts.Length; i++)
+            {
+                if (this.preferences.Shortcuts[i].IsHit)
+                {
+                    this.commands[this.preferences.Shortcuts[i].CommandName]();
+
+                    break;
+                }
+            }
+        }
+
         private async Task<string> GetUsdJpy()
         {
             string usdjpy = await this.client.GetStringAsync("https://finance.google.com/finance/converter?a=1&from=USD&to=JPY");
@@ -148,36 +210,21 @@ namespace SimpleZaifTrader
 
         private async void CurrencyPairComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            StringBuilder sb = new StringBuilder();
+
             this.cancellationTokenSource?.Cancel();
             this.cancellationTokenSource?.Dispose();
             this.publicApiUpdater?.CancelAsync();
             this.publicApiUpdater?.Dispose();
 
-            this.currencyPairSettings = Global.CurrencyPairDictionary[(string)this.currencyPairComboBox.SelectedItem];
-
-            if (this.IsLoaded)
-            {
-                this.increasePriceButton1.Content = this.FormatButtonContent(this.currencyPairSettings.PriceUnitStep);
-                this.decreasePriceButton1.Content = this.FormatButtonContent(-this.currencyPairSettings.PriceUnitStep);
-                this.increasePriceButton2.Content = this.FormatButtonContent(this.currencyPairSettings.PriceUnitStep * 10m);
-                this.decreasePriceButton2.Content = this.FormatButtonContent(this.currencyPairSettings.PriceUnitStep * -10m);
-                this.increasePriceButton3.Content = this.FormatButtonContent(this.currencyPairSettings.PriceUnitStep * 100m);
-                this.decreasePriceButton3.Content = this.FormatButtonContent(this.currencyPairSettings.PriceUnitStep * -100m);
-
-                this.increaseAmountButton1.Content = this.FormatButtonContent(this.currencyPairSettings.AmountUnitStep * 10m);
-                this.decreaseAmountButton1.Content = this.FormatButtonContent(this.currencyPairSettings.AmountUnitStep * -10m);
-                this.increaseAmountButton2.Content = this.FormatButtonContent(this.currencyPairSettings.AmountUnitStep * 100m);
-                this.decreaseAmountButton2.Content = this.FormatButtonContent(this.currencyPairSettings.AmountUnitStep * -100m);
-                this.increaseAmountButton3.Content = this.FormatButtonContent(this.currencyPairSettings.AmountUnitStep * 1000m);
-                this.decreaseAmountButton3.Content = this.FormatButtonContent(this.currencyPairSettings.AmountUnitStep * -1000m);
-            }
+            this.CurrencyPairSettings = Global.CurrencyPairDictionary[(string)this.currencyPairComboBox.SelectedItem];
 
             this.cancellationTokenSource = new CancellationTokenSource();
             this.publicApiUpdater = new BackgroundWorker() { WorkerReportsProgress = true, WorkerSupportsCancellation = true };
 
             if (this.useHttpsCheckBox != null && this.useHttpsCheckBox.IsChecked == true)
             {
-                this.logTextBox.Text += "GETting Data of " + this.currencyPairSettings.Name + " using https API." + Environment.NewLine;
+                this.logTextBox.Text += "GETting Data of " + this.CurrencyPairSettings.Name + " using https API." + Environment.NewLine;
                 this.logTextBox.ScrollToLine(this.logTextBox.LineCount - 1);
 
                 this.publicApiUpdater.DoWork += this.PublicApiDoWorkEventHandler;
@@ -193,26 +240,6 @@ namespace SimpleZaifTrader
             }
 
             this.publicApiUpdater.RunWorkerAsync();
-        }
-
-        private string FormatButtonContent(decimal d)
-        {
-            string str;
-
-            if (1m <= Math.Abs(d))
-            {
-                str = d.ToString();
-            }
-            if (0.0001m <= Math.Abs(d))
-            {
-                str = string.Format("{0:0.####}", d);
-            }
-            else
-            {
-                str = string.Format("{0:0e+0}", d);
-            }
-
-            return 0 <= d ? "+" + str : str;
         }
 
         private void OrderDataGrid_Initialized(object sender, EventArgs e) => this.orderDataGrid.ItemsSource = this.orders;
@@ -296,7 +323,7 @@ namespace SimpleZaifTrader
         {
             StreamingApiUtility sa = new StreamingApiUtility();
 
-            sa.StartReceiving(this.currencyPairSettings.Name, this.StreamingApiCallback, this.publicApiUpdater, cancellationTokenSource.Token).GetAwaiter().GetResult();
+            sa.StartReceiving(this.CurrencyPairSettings.Name, this.StreamingApiCallback, this.publicApiUpdater, cancellationTokenSource.Token).GetAwaiter().GetResult();
         }
 
         private void StreamingApiUpdaterProgressChangedEventHandler(object sender, ProgressChangedEventArgs args)
@@ -316,7 +343,7 @@ namespace SimpleZaifTrader
 
                     break;
                 case StreamingApiUtility.CallbackStatus.DataReceived:
-                    if (callbackArgs.CurrencyPair == this.currencyPairSettings.Name)
+                    if (callbackArgs.CurrencyPair == this.CurrencyPairSettings.Name)
                     {
                         this.OnStreamingDataReceived(callbackArgs.StreamingData);
                     }
@@ -390,8 +417,8 @@ namespace SimpleZaifTrader
 
         private async Task GetTradeInfoWithHttps()
         {
-            DepthResponse depth = await this.publicApi.GetDepth(this.currencyPairSettings.Name);
-            TradeResponse[] trades = await this.publicApi.GetTrades(this.currencyPairSettings.Name);
+            DepthResponse depth = await this.publicApi.GetDepth(this.CurrencyPairSettings.Name);
+            TradeResponse[] trades = await this.publicApi.GetTrades(this.CurrencyPairSettings.Name);
 
             this.bidBookSize = Math.Min(this.bids.Length, 10);
             this.askBookSize = Math.Min(this.asks.Length, 10);
@@ -406,94 +433,62 @@ namespace SimpleZaifTrader
                 ((ZaifBookOrder)this.asks[i]).Update(depth.Asks[i]);
             }
 
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < this.tradeHistory.Length; i++)
             {
                 ((ZaifTradeHistoryData)this.tradeHistory[i]).Update(trades[i]);
             }
 
             this.lastPrice = this.tradeHistory[0].Price;
-            this.timestamp = DateTime.Now.ToString("yyyy-mm-dd hh:mm:ss.ffffff");
+            this.timestamp = DateTime.Now.ToString("yyyy-mm-dd HH:mm:ss.ffffff");
         }
 
         private void UpdateTradeInfo()
         {
             StringBuilder sb = new StringBuilder();
-            
-            string orderBookFormat = Global.GetOrderBookFormat(this.currencyPairSettings);
-            string lastPriceFormat = Global.GetLastPriceFormat(this.currencyPairSettings);
-            
-            sb.AppendLine();
-            sb.AppendFormat("          買い           |           売り           ||            全取引履歴").AppendLine();
-            
-            for (int i = 0; i < this.bidBookSize; i++)
+
+            string tradeHistoryFormat = Global.GetTradeHistoryFormat(this.CurrencyPairSettings);
+            string orderBookFormat = Global.GetOrderBookFormat(this.CurrencyPairSettings);
+            string lastPriceFormat = Global.GetLastPriceFormat(this.CurrencyPairSettings);
+
+            sb.AppendLine("             全取引履歴             ").AppendLine();
+
+            for (int i = 0; i < this.tradeHistory.Length; i++)
             {
-                sb.AppendFormat(orderBookFormat,
-                    this.bids[this.bidBookSize - 1 - i].Price,
-                    this.bids[this.bidBookSize - 1 - i].Amount,
-                    this.asks[this.askBookSize - 1 - i].Price,
-                    this.asks[this.askBookSize - 1 - i].Amount,
-                    this.tradeHistory[i].Date.ToString("hh:mm:ss"),
+                sb.AppendFormat(tradeHistoryFormat,
+                    this.tradeHistory[i].Date.ToString("HH:mm:ss"),
                     this.tradeHistory[i].Type == TradeTypes.Bid ? "買い" : "売り",
                     this.tradeHistory[i].Price,
                     this.tradeHistory[i].Amount).AppendLine();
             }
-            
+
+            this.tradeHistoryTextBlock.Text = sb.ToString();
+            sb.Clear();
+            sb.AppendFormat("      売り         値段         買い      ").AppendLine().AppendLine();
+
+            for (int i = 0; i < this.askBookSize; i++)
+            {
+                sb.AppendFormat(orderBookFormat,
+                    this.asks[this.askBookSize - 1 - i].Amount,
+                    this.asks[this.askBookSize - 1 - i].Price,
+                    string.Empty).AppendLine();
+            }
+
             sb.AppendLine();
-            sb.AppendFormat(lastPriceFormat, this.lastPrice, this.lastPrice / this.usdjpy, this.usdjpy).AppendLine();
-            sb.AppendFormat("            スプレッド: {0, 11:p4}", (this.asks[0].Price - this.bids[0].Price) / this.lastPrice).AppendLine();
-            
-            this.textBlock.Text = sb.ToString();
-        }
+            sb.AppendFormat(lastPriceFormat, this.lastPrice, (this.asks[0].Price - this.bids[0].Price) / this.lastPrice).AppendLine();
+            sb.AppendLine();
 
-        #region PriceButtonEventHandlers
-
-        private void IncreasePriceButton1_Click(object sender, RoutedEventArgs e) => this.priceNumericTextBox.Text = this.GetNewText(this.priceNumericTextBox.Text, this.currencyPairSettings.PriceUnitStep);
-
-        private void IncreasePriceButton2_Click(object sender, RoutedEventArgs e) => this.priceNumericTextBox.Text = this.GetNewText(this.priceNumericTextBox.Text, this.currencyPairSettings.PriceUnitStep * 10m);
-
-        private void IncreasePriceButton3_Click(object sender, RoutedEventArgs e) => this.priceNumericTextBox.Text = this.GetNewText(this.priceNumericTextBox.Text, this.currencyPairSettings.PriceUnitStep * 100m);
-
-        private void DecreasePriceButton1_Click(object sender, RoutedEventArgs e) => this.priceNumericTextBox.Text = this.GetNewText(this.priceNumericTextBox.Text, -this.currencyPairSettings.PriceUnitStep);
-
-        private void DecreasePriceButton2_Click(object sender, RoutedEventArgs e) => this.priceNumericTextBox.Text = this.GetNewText(this.priceNumericTextBox.Text, this.currencyPairSettings.PriceUnitStep * -10m);
-
-        private void DecreasePriceButton3_Click(object sender, RoutedEventArgs e) => this.priceNumericTextBox.Text = this.GetNewText(this.priceNumericTextBox.Text, this.currencyPairSettings.PriceUnitStep * -100m);
-
-        private void IncreaseAmountButton1_Click(object sender, RoutedEventArgs e) => this.amountNumericTextBox.Text = this.GetNewText(this.amountNumericTextBox.Text, this.currencyPairSettings.AmountUnitStep);
-
-        private void IncreaseAmountButton2_Click(object sender, RoutedEventArgs e) => this.amountNumericTextBox.Text = this.GetNewText(this.amountNumericTextBox.Text, this.currencyPairSettings.AmountUnitStep * 10m);
-
-        private void IncreaseAmountButton3_Click(object sender, RoutedEventArgs e) => this.amountNumericTextBox.Text = this.GetNewText(this.amountNumericTextBox.Text, this.currencyPairSettings.AmountUnitStep * 100m);
-
-        private void DecreaseAmountButton1_Click(object sender, RoutedEventArgs e) => this.amountNumericTextBox.Text = this.GetNewText(this.amountNumericTextBox.Text, -this.currencyPairSettings.AmountUnitStep);
-
-        private void DecreaseAmountButton2_Click(object sender, RoutedEventArgs e) => this.amountNumericTextBox.Text = this.GetNewText(this.amountNumericTextBox.Text, this.currencyPairSettings.AmountUnitStep * -10m);
-
-        private void DecreaseAmountButton3_Click(object sender, RoutedEventArgs e) => this.amountNumericTextBox.Text = this.GetNewText(this.amountNumericTextBox.Text, this.currencyPairSettings.AmountUnitStep * -100m);
-
-        private void LastPriceButton_Click(object sender, RoutedEventArgs e) => this.priceNumericTextBox.Text = this.lastPrice.ToString();
-
-        private string GetNewText(string current, decimal delta)
-        {
-            decimal result;
-
-            if (current == string.Empty)
+            for (int i = 0; i < this.bidBookSize; i++)
             {
-                return (0m <= delta ? delta : 0m).ToString();
+                sb.AppendFormat(orderBookFormat,
+                    string.Empty,
+                    this.bids[i].Price,
+                    this.bids[i].Amount).AppendLine();
             }
 
-            if (!decimal.TryParse(current, out result))
-            {
-                return "0";
-            }
+            this.orderBookTextBlock.Text = sb.ToString();
 
-            result += delta;
-
-            return (0m <= result ? result : 0m).ToString();
+            this.usdPriceLabel.Content = string.Format("${0:#######0.00}  @{1:##0.000} USD/JPY", this.lastPrice / this.usdjpy, this.usdjpy);
         }
-
-
-        #endregion
 
         #region TradeButtonEventHandlers
 
@@ -503,36 +498,36 @@ namespace SimpleZaifTrader
             decimal amount;
             decimal? limit = null;
             ZaifNet.Trade.TradeResponse trade;
-            
+
             if (!decimal.TryParse(this.priceNumericTextBox.Text, out price))
             {
                 this.logTextBox.Text += "値段が不正です。" + Environment.NewLine;
-            
+
                 return;
             }
             if (!decimal.TryParse(this.amountNumericTextBox.Text, out amount))
             {
                 this.logTextBox.Text += "数量が不正です。" + Environment.NewLine;
-            
+
                 return;
             }
             if (!this.limitNumericTextBox.Text.Equals(string.Empty))
             {
                 decimal d;
-            
+
                 if (!decimal.TryParse(this.limitNumericTextBox.Text, out d))
                 {
-            
+
                     this.logTextBox.Text += "LIMITが不正です。" + Environment.NewLine;
-            
+
                     return;
                 }
-            
+
                 limit = d;
             }
-            
-            trade = await this.tradeApi.PostTrade(this.currencyPairSettings.Name, "bid", price, amount, limit, string.Empty);
-            
+
+            trade = await this.tradeApi.PostTrade(this.CurrencyPairSettings.Name, "bid", price, amount, limit, string.Empty);
+
             if (trade.Success == MainWindow.Succeeded)
             {
                 this.logTextBox.Text += string.Format("Opened a buy order: price={0}, amount={1}, limit={2}", price, amount, limit == null ? "--" : limit.ToString()) + Environment.NewLine;
@@ -577,7 +572,7 @@ namespace SimpleZaifTrader
                 limit = d;
             }
 
-            trade = await this.tradeApi.PostTrade(this.currencyPairSettings.Name, "ask", price, amount, limit, string.Empty);
+            trade = await this.tradeApi.PostTrade(this.CurrencyPairSettings.Name, "ask", price, amount, limit, string.Empty);
 
             if (trade.Success == MainWindow.Succeeded)
             {
@@ -625,7 +620,7 @@ namespace SimpleZaifTrader
                     limit = d;
                 }
 
-                trade = await this.tradeApi.PostTrade(this.currencyPairSettings.Name, "bid", this.lastPrice - offset, amount, limit, string.Empty);
+                trade = await this.tradeApi.PostTrade(this.CurrencyPairSettings.Name, "bid", this.lastPrice - offset, amount, limit, string.Empty);
 
                 if (trade.Success == MainWindow.Succeeded)
                 {
@@ -640,7 +635,7 @@ namespace SimpleZaifTrader
             {
                 decimal amount;
                 decimal? limit = null;
-                decimal bigLimit = MainWindow.Floor(this.lastPrice * 1.8m, this.currencyPairSettings.PriceUnitStep);
+                decimal bigLimit = MainWindow.Floor(this.lastPrice * 1.8m, this.CurrencyPairSettings.PriceUnitStep);
                 ZaifNet.Trade.TradeResponse trade;
 
                 if (!decimal.TryParse(this.amountNumericTextBox.Text, out amount))
@@ -664,7 +659,7 @@ namespace SimpleZaifTrader
                     limit = d;
                 }
 
-                trade = await this.tradeApi.PostTrade(this.currencyPairSettings.Name, "bid", bigLimit, amount, limit, string.Empty);
+                trade = await this.tradeApi.PostTrade(this.CurrencyPairSettings.Name, "bid", bigLimit, amount, limit, string.Empty);
 
                 if (trade.Success == MainWindow.Succeeded)
                 {
@@ -713,7 +708,7 @@ namespace SimpleZaifTrader
                     limit = d;
                 }
 
-                trade = await this.tradeApi.PostTrade(this.currencyPairSettings.Name, "ask", this.lastPrice + offset, amount, limit, string.Empty);
+                trade = await this.tradeApi.PostTrade(this.CurrencyPairSettings.Name, "ask", this.lastPrice + offset, amount, limit, string.Empty);
 
                 if (trade.Success == MainWindow.Succeeded)
                 {
@@ -728,7 +723,7 @@ namespace SimpleZaifTrader
             {
                 decimal amount;
                 decimal? limit = null;
-                decimal smallLimit = MainWindow.Floor(this.lastPrice * 0.6m, this.currencyPairSettings.PriceUnitStep);
+                decimal smallLimit = MainWindow.Floor(this.lastPrice * 0.6m, this.CurrencyPairSettings.PriceUnitStep);
                 ZaifNet.Trade.TradeResponse trade;
 
                 if (!decimal.TryParse(this.amountNumericTextBox.Text, out amount))
@@ -752,7 +747,7 @@ namespace SimpleZaifTrader
                     limit = d;
                 }
 
-                trade = await this.tradeApi.PostTrade(this.currencyPairSettings.Name, "ask", smallLimit, amount, limit, string.Empty);
+                trade = await this.tradeApi.PostTrade(this.CurrencyPairSettings.Name, "ask", smallLimit, amount, limit, string.Empty);
 
                 if (trade.Success == MainWindow.Succeeded)
                 {
@@ -765,8 +760,15 @@ namespace SimpleZaifTrader
             }
         }
 
-        private static decimal Floor(decimal d, decimal step) => step* Math.Floor(d / step);
+        private static decimal Floor(decimal d, decimal step) => step * Math.Floor(d / step);
 
         #endregion
+
+        private void ShortcutListMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            ShortcutListWindow slw = new ShortcutListWindow() { Owner = this };
+
+            slw.Show();
+        }
     }
 }

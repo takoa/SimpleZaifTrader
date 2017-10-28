@@ -15,19 +15,5 @@ namespace SimpleZaifTrader
 
         [JsonProperty("Secret")]
         public string SecretKey { get; set; }
-
-        public ApiKeys()
-        {
-        }
-
-        public static ApiKeys Read(string uri)
-        {
-            using (StreamReader reader = new StreamReader(uri))
-            {
-                string json = reader.ReadToEnd();
-
-                return JsonConvert.DeserializeObject<ApiKeys>(json);
-            }
-        }
     }
 }

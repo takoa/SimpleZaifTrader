@@ -1,0 +1,64 @@
+{
+  "Shortcuts": [
+    {
+      "Keys": [ "L", "LeftCtrl" ],
+      "CommandName": "CopyLastPrice"
+    },
+    {
+      "Keys": [ "R", "LeftCtrl" ],
+      "CommandName": "ClearPrice"
+    },
+    {
+      "Keys": [ "R", "LeftAlt" ],
+      "CommandName": "ClearAmount"
+    },
+    {
+      "Keys": [ "D1", "LeftCtrl" ],
+      "CommandName": "IncreasePrice1"
+    },
+    {
+      "Keys": [ "D2", "LeftCtrl" ],
+      "CommandName": "IncreasePrice2"
+    },
+    {
+      "Keys": [ "D3", "LeftCtrl" ],
+      "CommandName": "IncreasePrice3"
+    },
+    {
+      "Keys": [ "F1", "LeftCtrl" ],
+      "CommandName": "DecreasePrice1"
+    },
+    {
+      "Keys": [ "F2", "LeftCtrl" ],
+      "CommandName": "DecreasePrice2"
+    },
+    {
+      "Keys": [ "F3", "LeftCtrl" ],
+      "CommandName": "DecreasePrice3"
+    },
+    {
+      "Keys": [ "D1", "LeftAlt" ],
+      "CommandName": "IncreaseAmount1"
+    },
+    {
+      "Keys": [ "D2", "LeftAlt" ],
+      "CommandName": "IncreaseAmount2"
+    },
+    {
+      "Keys": [ "D3", "LeftAlt" ],
+      "CommandName": "IncreaseAmount3"
+    },
+    {
+      "Keys": [ "F1", "LeftAlt" ],
+      "CommandName": "DecreaseAmount1"
+    },
+    {
+      "Keys": [ "F2", "LeftAlt" ],
+      "CommandName": "DecreaseAmount2"
+    },
+    {
+      "Keys": [ "F3", "LeftAlt" ],
+      "CommandName": "DecreaseAmount3"
+    }
+  ]
+}

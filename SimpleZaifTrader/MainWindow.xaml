@@ -5,16 +5,16 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SimpleZaifTrader"
         mc:Ignorable="d"
-        Title="MainWindow" Height="550" Width="800" Loaded="Window_Loaded">
+        Title="MainWindow" Height="622" Width="890" Loaded="Window_Loaded" PreviewKeyDown="Window_PreviewKeyDown" >
     <Window.Resources>
         <ResourceDictionary Source="ResourceDictionary.xaml" />
     </Window.Resources>
     <Grid>
-        <TextBlock x:Name="textBlock" FontSize="16" FontFamily="MS Gothic" HorizontalAlignment="Stretch" Margin="10,35,10,240" TextWrapping="Wrap" />
-        <Label Content="通貨ペア" HorizontalAlignment="Left" Margin="10,5,0,0" VerticalAlignment="Top" Width="53" Height="25"/>
-        <ComboBox x:Name="currencyPairComboBox" SelectedIndex="0" HorizontalAlignment="Left" Margin="68,5,0,0" VerticalAlignment="Top" Width="120" Initialized="CurrencyPairComboBox_Initialized" SelectionChanged="CurrencyPairComboBox_SelectionChanged" Height="25"/>
-        <CheckBox x:Name="useHttpsCheckBox" HorizontalAlignment="Left" Margin="630,10,0,0" VerticalAlignment="Top"/>
-        <ScrollViewer HorizontalAlignment="Left" Height="81" Margin="10,0,0,10" VerticalAlignment="Bottom" Width="383">
+        <TextBlock x:Name="orderBookTextBlock" FontSize="16" FontFamily="MS Gothic" HorizontalAlignment="Left" Margin="340,57,0,0" TextWrapping="NoWrap" Width="302" Height="404" VerticalAlignment="Top" />
+        <Label Content="通貨ペア" HorizontalAlignment="Left" Margin="10,27,0,0" VerticalAlignment="Top" Width="53" Height="26"/>
+        <ComboBox x:Name="currencyPairComboBox" SelectedIndex="0" HorizontalAlignment="Left" Margin="68,27,0,0" VerticalAlignment="Top" Width="120" Initialized="CurrencyPairComboBox_Initialized" SelectionChanged="CurrencyPairComboBox_SelectionChanged" Height="26"/>
+        <CheckBox x:Name="useHttpsCheckBox" HorizontalAlignment="Left" Margin="498,33,0,0" VerticalAlignment="Top"/>
+        <ScrollViewer HorizontalAlignment="Left" Margin="422,467,0,0" Width="450" Height="114" VerticalAlignment="Top">
             <DataGrid x:Name="orderDataGrid" Initialized="OrderDataGrid_Initialized" AutoGeneratingColumn="OrderDataGrid_AutoGeneratingColumn">
                 <DataGrid.Columns>
                     <DataGridTemplateColumn Header="" >
@@ -27,37 +27,34 @@
                 </DataGrid.Columns>
             </DataGrid>
         </ScrollViewer>
-        <local:NumericTextBox x:Name="priceNumericTextBox" TextAlignment="Right" Margin="59,0,0,210" HorizontalAlignment="Left" Width="110" Height="25" VerticalAlignment="Bottom" />
-        <Label x:Name="timestampLabel" Margin="193,5,0,0" VerticalAlignment="Top" Height="25" HorizontalAlignment="Left" Width="432"/>
-        <Label Content="価格" HorizontalAlignment="Left" Margin="10,0,0,210" Width="42" Height="25" VerticalAlignment="Bottom"/>
-        <Label Content="数量" HorizontalAlignment="Left" Margin="10,0,0,180" Width="42" Height="25" VerticalAlignment="Bottom"/>
-        <local:NumericTextBox x:Name="amountNumericTextBox" TextAlignment="Right" Margin="59,0,0,180" HorizontalAlignment="Left" Width="110" Height="25" VerticalAlignment="Bottom" />
-        <Button x:Name="increasePriceButton1" Content="+5" HorizontalAlignment="Left" Margin="174,0,0,210" Width="55" Click="IncreasePriceButton1_Click" Height="25" VerticalAlignment="Bottom"/>
-        <Button x:Name="decreasePriceButton1" Content="-5" HorizontalAlignment="Left" Margin="234,0,0,210" Width="55" Click="DecreasePriceButton1_Click" Height="25" VerticalAlignment="Bottom"/>
-        <Button x:Name="increasePriceButton2" Content="+50" HorizontalAlignment="Left" Margin="294,0,0,210" Width="55" Click="IncreasePriceButton2_Click" Height="25" VerticalAlignment="Bottom"/>
-        <Button x:Name="decreasePriceButton2" Content="-50" HorizontalAlignment="Left" Margin="354,0,0,210" Width="55" Click="DecreasePriceButton2_Click" Height="25" VerticalAlignment="Bottom"/>
-        <Button x:Name="increasePriceButton3" Content="+500" HorizontalAlignment="Left" Margin="414,0,0,210" Width="55" Click="IncreasePriceButton3_Click" Height="25" VerticalAlignment="Bottom"/>
-        <Button x:Name="decreasePriceButton3" Content="-500" HorizontalAlignment="Left" Margin="474,0,0,210" Width="55" Click="DecreasePriceButton3_Click" Height="25" VerticalAlignment="Bottom"/>
-        <Button Content="最終" HorizontalAlignment="Left" Margin="534,0,0,210" Width="55" Click="LastPriceButton_Click" Height="25" VerticalAlignment="Bottom"/>
-        <Button x:Name="increaseAmountButton1" Content="+0.001" HorizontalAlignment="Left" Margin="174,0,0,180" Width="55" Click="IncreaseAmountButton1_Click" Height="25" VerticalAlignment="Bottom"/>
-        <Button x:Name="decreaseAmountButton1" Content="-0.001" HorizontalAlignment="Left" Margin="234,0,0,180" Width="55" Click="DecreaseAmountButton1_Click" Height="25" VerticalAlignment="Bottom"/>
-        <Button x:Name="increaseAmountButton2" Content="+0.01" HorizontalAlignment="Left" Margin="294,0,0,180" Width="55" Click="IncreaseAmountButton2_Click" Height="25" VerticalAlignment="Bottom"/>
-        <Button x:Name="decreaseAmountButton2" Content="-0.01" HorizontalAlignment="Left" Margin="354,0,0,180" Width="55" Click="DecreaseAmountButton2_Click" Height="25" VerticalAlignment="Bottom"/>
-        <Button x:Name="increaseAmountButton3" Content="+0.1" HorizontalAlignment="Left" Margin="414,0,0,180" Width="55" Click="IncreaseAmountButton3_Click" Height="25" VerticalAlignment="Bottom"/>
-        <Button x:Name="decreaseAmountButton3" Content="-0.1" HorizontalAlignment="Left" Margin="474,0,0,180" Width="55" Click="DecreaseAmountButton3_Click" Height="25" VerticalAlignment="Bottom"/>
-        <Button Content="買い" FontSize="25" Margin="15,0,0,105" Height="35" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="75" Click="LimitBuyButton_Click"/>
-        <Button Content="売り" FontSize="25" Margin="137,0,0,105" Height="35" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="75" Click="LimitSellButton_Click"/>
-        <Label Content="LIMIT" HorizontalAlignment="Left" Margin="10,0,0,150" Width="44" Height="25" VerticalAlignment="Bottom"/>
-        <local:NumericTextBox x:Name="limitNumericTextBox" TextAlignment="Right" Margin="59,0,0,150" HorizontalAlignment="Left" Width="110" Height="25" VerticalAlignment="Bottom" />
-        <CheckBox x:Name="limitedMarketOrderCheckBox" IsChecked="True" HorizontalAlignment="Left" Margin="396,0,0,144" Width="17" Height="25" VerticalAlignment="Bottom"/>
-        <Label Content="成行を最終価格より" HorizontalAlignment="Left" Margin="413,0,0,150" Width="107" Height="25" VerticalAlignment="Bottom"/>
-        <Label Content="円有利な指値に置き換える" HorizontalAlignment="Left" Margin="641,0,0,150" Width="141" Height="25" VerticalAlignment="Bottom"/>
-        <local:NumericTextBox x:Name="limitedMarketOrderNumericTextBox" Text="0" TextAlignment="Right" Margin="526,0,0,150" HorizontalAlignment="Left" Width="110" Height="25" VerticalAlignment="Bottom" />
-        <Button Content="成行買い" FontSize="25" Margin="452,0,0,105" Height="35" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="100" Click="LimitedMarketBuyButton_Click"/>
-        <Button Content="成行売り" FontSize="25" Margin="612,0,0,105" Height="35" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="100" Click="LimitedMarketSellButton_Click"/>
-        <ScrollViewer HorizontalAlignment="Right" Height="81" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="382">
+        <Label x:Name="timestampLabel" Margin="193,27,0,0" VerticalAlignment="Top" Height="26" HorizontalAlignment="Left" Width="300"/>
+        <Label Content="価格" HorizontalAlignment="Left" Width="44" Height="24" VerticalAlignment="Top" Margin="660,144,0,0"/>
+        <Label Content="数量" HorizontalAlignment="Left" Margin="660,174,0,0" Width="44" Height="24" VerticalAlignment="Top"/>
+        <Label Content="LIMIT" HorizontalAlignment="Left" Margin="660,204,0,0" Width="44" Height="24" VerticalAlignment="Top"/>
+        <local:NumericTextBox x:Name="priceNumericTextBox" TextAlignment="Right" HorizontalAlignment="Left" Width="115" Height="24" VerticalAlignment="Top" Margin="709,144,0,0" />
+        <local:NumericTextBox x:Name="amountNumericTextBox" TextAlignment="Right" Margin="709,174,0,0" HorizontalAlignment="Left" Width="115" Height="24" VerticalAlignment="Top" />
+        <local:NumericTextBox x:Name="limitNumericTextBox" TextAlignment="Right" Margin="709,204,0,0" HorizontalAlignment="Left" Width="115" Height="24" VerticalAlignment="Top" />
+        <Button Content="買い" FontSize="25" Margin="660,252,0,0" Height="36" VerticalAlignment="Top" HorizontalAlignment="Left" Width="75" Click="LimitBuyButton_Click"/>
+        <Button Content="売り" FontSize="25" Margin="797,252,0,0" Height="36" VerticalAlignment="Top" HorizontalAlignment="Left" Width="75" Click="LimitSellButton_Click"/>
+        <CheckBox x:Name="limitedMarketOrderCheckBox" IsChecked="True" HorizontalAlignment="Left" Margin="660,304,0,0" Width="17" Height="26" VerticalAlignment="Top"/>
+        <Label Content="成行を最終価格より" HorizontalAlignment="Left" Margin="676,298,0,0" Width="107" Height="26" VerticalAlignment="Top"/>
+        <Label Content="有利な指値に置き換える(事故防止)" HorizontalAlignment="Left" Margin="677,328,0,0" Width="190" Height="26" VerticalAlignment="Top"/>
+        <local:NumericTextBox x:Name="limitedMarketOrderNumericTextBox" Text="0" TextAlignment="Right" Margin="783,298,0,0" HorizontalAlignment="Left" Width="68" Height="26" VerticalAlignment="Top" />
+        <Button Content="成行買い" FontSize="25" Margin="660,370,0,0" Height="34" VerticalAlignment="Top" HorizontalAlignment="Left" Width="100" Click="LimitedMarketBuyButton_Click"/>
+        <Button Content="成行売り" FontSize="25" Margin="772,370,0,0" Height="36" VerticalAlignment="Top" HorizontalAlignment="Left" Width="100" Click="LimitedMarketSellButton_Click"/>
+        <ScrollViewer HorizontalAlignment="Left" Margin="10,467,0,0" Width="407" Height="114" VerticalAlignment="Top">
             <TextBox x:Name="logTextBox" TextWrapping="Wrap" />
         </ScrollViewer>
-        <Label x:Name="label" Content="httpsでデータを取得する" HorizontalAlignment="Left" Margin="651,5,0,0" VerticalAlignment="Top" Width="131"/>
+        <Label Content="httpsでデータを取得する" HorizontalAlignment="Left" Margin="519,27,0,0" VerticalAlignment="Top" Width="131"/>
+        <ScrollViewer HorizontalAlignment="Left" Height="404" Margin="10,57,0,0" VerticalAlignment="Top" Width="325">
+            <TextBlock x:Name="tradeHistoryTextBlock" FontFamily="MS Gothic" FontSize="16" TextWrapping="NoWrap"/>
+        </ScrollViewer>
+        <Label Content="円" Margin="851,298,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="21"/>
+        <Label x:Name="usdPriceLabel" HorizontalAlignment="Left" Margin="647,57,0,0" VerticalAlignment="Top" Width="225" Height="26"/>
+        <Menu x:Name="menu" HorizontalAlignment="Stretch" Height="17" VerticalAlignment="Top">
+            <MenuItem Header="ヘルプ">
+                <MenuItem Header="初期ショートカットキー一覧" Click="ShortcutListMenuItem_Click" />
+            </MenuItem>
+        </Menu>
     </Grid>
 </Window>

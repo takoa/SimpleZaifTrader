@@ -82,9 +82,14 @@
     </ApplicationDefinition>
     <Compile Include="ApiKeys.cs" />
     <Compile Include="CurrencyPairSettings.cs" />
+    <Compile Include="Preferences.cs" />
+    <Compile Include="Shortcut.cs" />
     <Compile Include="NumericDataGridColumn.cs" />
     <Compile Include="NumericTextBox.cs" />
     <Compile Include="Order.cs" />
+    <Compile Include="ShortcutListWindow.xaml.cs">
+      <DependentUpon>ShortcutListWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ZaifBookOrder.cs" />
     <Compile Include="ZaifTradeHistoryData.cs" />
     <Page Include="MainWindow.xaml">
@@ -102,6 +107,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="ResourceDictionary.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ShortcutListWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -125,6 +134,9 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <None Include="packages.config" />
+    <None Include="Preferences.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
