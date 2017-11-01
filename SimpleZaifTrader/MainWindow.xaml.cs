@@ -14,6 +14,7 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 using Newtonsoft.Json;
 using CryptoWei;
 
@@ -133,7 +134,7 @@ namespace SimpleZaifTrader
                     ActiveOrdersResponse activeOrers = this.tradeApi.PostActiveOrders(this.CurrencyPairSettings.Name).GetAwaiter().GetResult();
 
                     ((BackgroundWorker)obj).ReportProgress(0, activeOrers);
-                    Thread.Sleep(1000);
+                    Thread.Sleep(5000);
                 }
             };
             this.activeOrderUpdater.ProgressChanged += (obj, eventArgs) =>
@@ -305,7 +306,7 @@ namespace SimpleZaifTrader
                 return;
             }
 
-            cancelledOrder = await this.tradeApi.PostCancelOrder(order.ID);
+            cancelledOrder = await this.tradeApi.PostCancelOrder(this.CurrencyPairSettings.Name, order.ID);
 
             if (cancelledOrder.Success == MainWindow.Succeeded)
             {
@@ -526,6 +527,14 @@ namespace SimpleZaifTrader
                 limit = d;
             }
 
+            if (this.lastPrice * 1.05m <= price || price <= this.lastPrice * 0.95m)
+            {
+                if (MessageBox.Show(this, "最終価格と5%以上の差があります。よろしいですか？", "確認", MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+                {
+                    return;
+                }
+            }
+
             trade = await this.tradeApi.PostTrade(this.CurrencyPairSettings.Name, "bid", price, amount, limit, string.Empty);
 
             if (trade.Success == MainWindow.Succeeded)
@@ -536,6 +545,8 @@ namespace SimpleZaifTrader
             {
                 this.logTextBox.Text += "Failed to open a buy order." + Environment.NewLine;
             }
+
+            this.PutInterval(this.limitBuyButton);
         }
 
         private async void LimitSellButton_Click(object sender, RoutedEventArgs e)
@@ -572,6 +583,14 @@ namespace SimpleZaifTrader
                 limit = d;
             }
 
+            if (this.lastPrice * 1.05m <= price || price <= this.lastPrice * 0.95m)
+            {
+                if (MessageBox.Show(this, "最終価格と5%以上の差があります。よろしいですか？", "確認", MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+                {
+                    return;
+                }
+            }
+
             trade = await this.tradeApi.PostTrade(this.CurrencyPairSettings.Name, "ask", price, amount, limit, string.Empty);
 
             if (trade.Success == MainWindow.Succeeded)
@@ -580,11 +599,13 @@ namespace SimpleZaifTrader
             }
             else
             {
-                this.logTextBox.Text += "Failed to open a buy order." + Environment.NewLine;
+                this.logTextBox.Text += "Failed to open a sell order." + Environment.NewLine;
             }
+
+            this.PutInterval(this.limitSellButton);
         }
 
-        private async void LimitedMarketBuyButton_Click(object sender, RoutedEventArgs e)
+        private async void MarketBuyButton_Click(object sender, RoutedEventArgs e)
         {
             if (this.limitedMarketOrderCheckBox.IsChecked == true)
             {
@@ -670,6 +691,8 @@ namespace SimpleZaifTrader
                     this.logTextBox.Text += "Failed to open a buy order." + Environment.NewLine;
                 }
             }
+
+            this.PutInterval(this.marketBuyButton);
         }
 
         private async void LimitedMarketSellButton_Click(object sender, RoutedEventArgs e)
@@ -758,9 +781,25 @@ namespace SimpleZaifTrader
                     this.logTextBox.Text += "Failed to open a sell order." + Environment.NewLine;
                 }
             }
+
+            this.PutInterval(this.marketSellButton);
         }
 
         private static decimal Floor(decimal d, decimal step) => step * Math.Floor(d / step);
+
+        private void PutInterval(Button button)
+        {
+            DispatcherTimer dt = new DispatcherTimer() { Interval = TimeSpan.FromSeconds(3d) };
+
+            button.IsEnabled = false;
+            dt.Start();
+            dt.Tick += (sender, e) =>
+            {
+                dt.Stop();
+
+                button.IsEnabled = true;
+            };
+        }
 
         #endregion
 

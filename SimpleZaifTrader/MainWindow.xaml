@@ -34,14 +34,14 @@
         <local:NumericTextBox x:Name="priceNumericTextBox" TextAlignment="Right" HorizontalAlignment="Left" Width="115" Height="24" VerticalAlignment="Top" Margin="709,144,0,0" />
         <local:NumericTextBox x:Name="amountNumericTextBox" TextAlignment="Right" Margin="709,174,0,0" HorizontalAlignment="Left" Width="115" Height="24" VerticalAlignment="Top" />
         <local:NumericTextBox x:Name="limitNumericTextBox" TextAlignment="Right" Margin="709,204,0,0" HorizontalAlignment="Left" Width="115" Height="24" VerticalAlignment="Top" />
-        <Button Content="買い" FontSize="25" Margin="660,252,0,0" Height="36" VerticalAlignment="Top" HorizontalAlignment="Left" Width="75" Click="LimitBuyButton_Click"/>
-        <Button Content="売り" FontSize="25" Margin="797,252,0,0" Height="36" VerticalAlignment="Top" HorizontalAlignment="Left" Width="75" Click="LimitSellButton_Click"/>
+        <Button x:Name="limitBuyButton" Content="買い" FontSize="25" Margin="660,252,0,0" Height="36" VerticalAlignment="Top" HorizontalAlignment="Left" Width="75" Click="LimitBuyButton_Click"/>
+        <Button x:Name="limitSellButton" Content="売り" FontSize="25" Margin="797,252,0,0" Height="36" VerticalAlignment="Top" HorizontalAlignment="Left" Width="75" Click="LimitSellButton_Click"/>
         <CheckBox x:Name="limitedMarketOrderCheckBox" IsChecked="True" HorizontalAlignment="Left" Margin="660,304,0,0" Width="17" Height="26" VerticalAlignment="Top"/>
         <Label Content="成行を最終価格より" HorizontalAlignment="Left" Margin="676,298,0,0" Width="107" Height="26" VerticalAlignment="Top"/>
         <Label Content="有利な指値に置き換える(事故防止)" HorizontalAlignment="Left" Margin="677,328,0,0" Width="190" Height="26" VerticalAlignment="Top"/>
         <local:NumericTextBox x:Name="limitedMarketOrderNumericTextBox" Text="0" TextAlignment="Right" Margin="783,298,0,0" HorizontalAlignment="Left" Width="68" Height="26" VerticalAlignment="Top" />
-        <Button Content="成行買い" FontSize="25" Margin="660,370,0,0" Height="34" VerticalAlignment="Top" HorizontalAlignment="Left" Width="100" Click="LimitedMarketBuyButton_Click"/>
-        <Button Content="成行売り" FontSize="25" Margin="772,370,0,0" Height="36" VerticalAlignment="Top" HorizontalAlignment="Left" Width="100" Click="LimitedMarketSellButton_Click"/>
+        <Button x:Name="marketBuyButton" Content="成行買い" FontSize="25" Margin="660,370,0,0" Height="34" VerticalAlignment="Top" HorizontalAlignment="Left" Width="100" Click="MarketBuyButton_Click"/>
+        <Button x:Name="marketSellButton" Content="成行売り" FontSize="25" Margin="772,370,0,0" Height="36" VerticalAlignment="Top" HorizontalAlignment="Left" Width="100" Click="LimitedMarketSellButton_Click"/>
         <ScrollViewer HorizontalAlignment="Left" Margin="10,467,0,0" Width="407" Height="114" VerticalAlignment="Top">
             <TextBox x:Name="logTextBox" TextWrapping="Wrap" />
         </ScrollViewer>

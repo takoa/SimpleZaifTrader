@@ -58,14 +58,17 @@ namespace ZaifNet.Trade
             return JsonConvert.DeserializeObject<TradeResponse>(await this.Post("trade", parameters));
         }
 
-        public async Task<CancelOrderResponse> PostCancelOrder(long id)
+        public async Task<CancelOrderResponse> PostCancelOrder(string currencyPair, long id)
         {
             Dictionary<string, string> parameters = new Dictionary<string, string>()
             {
-                { "order_id", id.ToString() }
+                { "order_id", id.ToString() },
+                { "currency_pair", currencyPair }
             };
 
-            return JsonConvert.DeserializeObject<CancelOrderResponse>(await this.Post("cancel_order", parameters));
+            string str = await this.Post("cancel_order", parameters);
+
+            return JsonConvert.DeserializeObject<CancelOrderResponse>(str);
         }
 
         public async Task<GetInfo2Response> PostGetInfo2() => JsonConvert.DeserializeObject<GetInfo2Response>(await this.Post("get_info2", null));
