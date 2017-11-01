@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SimpleZaifTrader"
         mc:Ignorable="d"
-        Title="初期ショートカットキー一覧" Height="150" Width="430" Loaded="Window_Loaded">
+        Title="初期ショートカットキー一覧" Height="200" Width="430" Loaded="Window_Loaded">
     <Grid>
         <TextBlock x:Name="textBlock" Margin="10" TextWrapping="Wrap" />
     </Grid>

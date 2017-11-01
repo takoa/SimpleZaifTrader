@@ -30,6 +30,9 @@ namespace SimpleZaifTrader
             sb.AppendFormat("Left Ctrl + F1/F2/F3: 価格{0}/{1}/{2}", -currencyPairSettings.PriceUnitStep, currencyPairSettings.PriceUnitStep * -10m, currencyPairSettings.PriceUnitStep * -100m).AppendLine();
             sb.AppendFormat("Left Alt + 1/2/3: 数量+{0}/+{1}/+{2}", currencyPairSettings.AmountUnitStep, currencyPairSettings.AmountUnitStep * 10m, currencyPairSettings.AmountUnitStep * 100m).AppendLine();
             sb.AppendFormat("Left Alt + F1/F2/F3: 数量{0}/{1}/{2}", -currencyPairSettings.AmountUnitStep, currencyPairSettings.AmountUnitStep * -10m, currencyPairSettings.AmountUnitStep * -100m).AppendLine();
+            sb.AppendLine("Left Ctrl + L: 最終価格を価格欄にコピー");
+            sb.AppendLine("Left Ctrl + R: 価格をクリア");
+            sb.AppendLine("Left Alt + R: 数量をクリア");
             this.textBlock.Text = sb.ToString();
         }
     }
